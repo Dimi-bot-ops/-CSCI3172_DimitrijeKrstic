@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Music Discovery App</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>🎶 Music Discovery App</h1>
+    <input type="text" id="artistInput" placeholder="Enter artist name..." />
+    <button onclick="searchArtist()">Search</button>
+
+    <div id="artistInfo"></div>
+    <div id="recommendations"></div>
+  </div>
+
+  <script>
+    async function searchArtist() {
+      const artistName = document.getElementById('artistInput').value;
+      if (!artistName) return;
+
+      const res = await fetch(`/artist/${encodeURIComponent(artistName)}`);
+      const data = await res.json();
+
+      if (data.length > 0) {
+        const artist = data[0];
+        document.getElementById('artistInfo').innerHTML = `
+          <div class="artist-card">
+            <img src="${artist.images[0]?.url || ''}" alt="${artist.name}" />
+            <h2>${artist.name}</h2>
+            <p>Followers: ${artist.followers.total.toLocaleString()}</p>
+            <p>Genres: ${artist.genres.join(', ') || 'N/A'}</p>
+            <button onclick="getRecommendations('${artist.id}')">Discover Similar</button>
+          </div>
+        `;
+      } else {
+        document.getElementById('artistInfo').innerHTML = `<p>No artist found</p>`;
+      }
+    }
+
+    async function getRecommendations(artistId) {
+      const res = await fetch(`/recommend/${artistId}`);
+      const data = await res.json();
+
+      if (data.length > 0) {
+        document.getElementById('recommendations').innerHTML = `
+          <h2>Similar Artists:</h2>
+          <div class="recommendations-list">
+            ${data
+              .map(
+                artist => `
+                <div class="artist-card">
+                  <img src="${artist.images[0]?.url || ''}" alt="${artist.name}" />
+                  <h3>${artist.name}</h3>
+                  <p>Genres: ${artist.genres.join(', ') || 'N/A'}</p>
+                </div>
+              `
+              )
+              .join('')}
+          </div>
+        `;
+      } else {
+        document.getElementById('recommendations').innerHTML = `<p>No similar artists found</p>`;
+      }
+    }
+  </script>
+</body>
+</html>
